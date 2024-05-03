@@ -13,12 +13,6 @@ import org.fog.application.AppLoop;
 import org.fog.application.Application;
 import org.fog.application.selectivity.FractionalSelectivity;
 import org.fog.entities.*;
-import org.fog.entities.MicroserviceFogDevice;
-import org.fog.entities.PlacementRequest;
-import org.fog.gui.dialog.AddAppEdge;
-import org.fog.mobilitydata.DataParser;
-import org.fog.mobilitydata.RandomMobilityGenerator;
-import org.fog.mobilitydata.References;
 import org.fog.placement.*;
 import org.fog.policy.AppModuleAllocationPolicy;
 import org.fog.scheduler.StreamOperatorScheduler;
@@ -26,9 +20,7 @@ import org.fog.utils.FogLinearPowerModel;
 import org.fog.utils.FogUtils;
 import org.fog.utils.TimeKeeper;
 import org.fog.utils.distribution.DeterministicDistribution;
-import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
 import java.util.*;
 
 public class AgricultureSimulation {
@@ -56,17 +48,20 @@ public class AgricultureSimulation {
     static String Ptz_Actuator_Type = "PTZ_CONTROL";
 
     static String Router_Device_Name = "Router";
-    static int Cam_Per_Router = 1;
+    static int Cam_Per_Router = 2;
 
-    static int totalArea = 1;
-    static int Pir_Per_Router = 1;
+    // 1 unit of area is 4 acres
+    static int totalArea = 4;
+
+    // 2 Pir sensors per edge device
+    static int Pir_Per_Router = 2;
     static String Pir_Device_Name = "PIR";
     static String Pir_Sensor_Name = "PIR_SENSOR";
 
     static String Pir_Tuple_Type = "PIR";
 
-    //
-    static int Temp_Per_Router = 1;
+    // 2 temperature sensors per edge device
+    static int Temp_Per_Router = 2;
     static String Temp_Device_Name = "TEMP";
     static String Temp_Sensor_Name = "Temperature_SENSOR";
 
@@ -89,7 +84,7 @@ public class AgricultureSimulation {
     static String Motion_Analyzer = "Motion_Analyzer";
 
     //
-    static int Smoke_Per_Router = 1;
+    static int Smoke_Per_Router = 2;
     static String SmokeDetector_Device_Name = "SMOKE";
     static String Smoke_Sensor_Name = "SMOKE_SENSOR";
 
@@ -104,7 +99,7 @@ public class AgricultureSimulation {
 
 
     //
-    static int WaterAndAir_Per_Router = 1;
+    static int WaterAndAir_Per_Router = 2;
     static String WaterAndAir_Device_Name = "WAA";
     static String WaterAndAir_Sensor_Name = "WATER_AND_AIR_QUALITY_SENSOR";
 
@@ -278,11 +273,11 @@ public class AgricultureSimulation {
         return cloud;
     }
 
-    public static FogDevice createProxyServer(int parentId) {
+    public static FogDevice createCetralFogDevice(int parentId) {
 
-        FogDevice proxy = createFogDevice(Proxy_Server_Base_Name, 2800, 4000, 10000, 10000, 1, 0.01, 107.339, 83.4333);
-        proxy.setParentId(parentId);
-        return proxy;
+        FogDevice centralFogDevice = createFogDevice(Proxy_Server_Base_Name, 2800, 4000, 10000, 10000, 1, 0.01, 107.339, 83.4333);
+        centralFogDevice.setParentId(parentId);
+        return centralFogDevice;
     }
 
 
@@ -487,10 +482,10 @@ public class AgricultureSimulation {
    public static void setUpIotDevices(String appId,int userId) {
         FogDevice cloudServer = createCloud();
         fogDevices.add(cloudServer);
-        FogDevice proxyServer = createProxyServer(cloudServer.getId());
-        fogDevices.add(proxyServer);
+        FogDevice centralFogDevice = createCetralFogDevice(cloudServer.getId());
+        fogDevices.add(centralFogDevice);
         for (int i=0;i<totalArea;i++) {
-            createAndPopulateRouter(i,appId,userId, proxyServer.getId());
+            createAndPopulateRouter(i,appId,userId, centralFogDevice.getId());
         }
    }
 
